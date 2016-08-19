@@ -6,8 +6,9 @@ use App\Domain\Email\Email;
 use App\Domain\Email\EmailRepository;
 use App\Domain\Users\Users;
 use App\Domain\Users\UsersRepository;
-use App\Infrastructure\Email\DoctrineEmailRepository;
-use App\Infrastructure\Users\DoctrineUsersRepository;
+use app\Domain\Users\UsersSaveDataMapper;
+use App\Repositories\Email\DoctrineEmailRepository;
+use App\Repositories\Users\DoctrineUsersRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,6 +37,10 @@ class AppServiceProvider extends ServiceProvider
                 $app['em'],
                 $app['em']->getClassMetaData(Users::class)
             );
+        });
+
+        $this->app->bind(UsersSaveDataMapper::class, function($app, $params) {
+            return new UsersSaveDataMapper($params);
         });
     }
 }

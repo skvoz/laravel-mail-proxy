@@ -7,14 +7,14 @@
  */
 
 namespace App\Http\Controllers;
+
 use App\Domain\Email\EmailRepository;
+use App\Domain\Users\Users;
 use App\Domain\Users\UsersRepository;
-use Illuminate\Support\Facades\App;
-use Mail;
+use App\Domain\Users\UsersSaveDataMapper;
+use Exception;
 use App\Http\Requests\EmailFormRequest;
 use App\Http\Requests\UserFormRequest;
-
-
 
 /**
  * Class APIController
@@ -22,13 +22,41 @@ use App\Http\Requests\UserFormRequest;
  */
 class APIController extends Controller
 {
+    /**
+     * @var EmailRepository
+     */
     protected $emailRepository;
+    /**
+     * @var UsersRepository
+     */
     protected $userRepository;
+    /**
+     * @var UsersSaveDataMapper
+     */
+    protected $userSaveDataMapper;
+    /**
+     * @var Users
+     */
+    protected $userEntity;
 
-    public function __construct()
-    {
-        $this->emailRepository = App::make(EmailRepository::class);
-        $this->userRepository = App::make(UsersRepository::class);
+    /**
+     * @param UsersSaveDataMapper $usersSaveDataMapper
+     * @param EmailRepository $emailRepository
+     * @param UsersRepository $usersRepository
+     * @param Users $userEntity
+     * @internal param Users $userEntitiy
+     */
+    public function __construct(
+        UsersSaveDataMapper $usersSaveDataMapper,
+        EmailRepository $emailRepository,
+        UsersRepository $usersRepository,
+        Users $userEntity
+    ) {
+        $this->userSaveDataMapper = $usersSaveDataMapper;
+        $this->emailRepository = $emailRepository;
+        $this->userRepository = $usersRepository;
+        $this->userEntity = $userEntity;
+
     }
     /**
      * @param EmailFormRequest $response
@@ -63,19 +91,26 @@ class APIController extends Controller
      */
     public function register(UserFormRequest $request)
     {
-        $name = $request->input('name');
-        $email = $request->input('email');
-        $result = [];
+        $this->userSaveDataMapper->setRequest($request);
+        $data = $this->userSaveDataMapper->execute();
+
         try {
-            $users = $this->userRepository->create([
-                'name'=> $name,
-                'email' => $email
-            ]);
+            $this->userEntity->setName($data['name']);
+            $this->userEntity->setEmail($data['email']);
+            $this->userEntity->setPassword($data['password']);
+            $this->userEntity->setRememberToken($data['remember_token']);
+            $this->userEntity->setCreatedAt($data['created_at']);
+            $this->userEntity->setUpdatedAt($data['updated_at']);
+            $this->userEntity->setApiToken($data['api_token']);
+
+            $this->userRepository->save($this->userEntity);
+
             $result = [
-                'api_token' => $users->getApiToken(),
+                'api_token' => $this->userEntity->getApiToken(),
             ];
             $status = 200;
         } catch (Exception $e) {
+            $result = ['error' => $e->getMessage()];
             $status = 500;
         }
 
