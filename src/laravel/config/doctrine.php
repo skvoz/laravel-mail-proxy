@@ -23,10 +23,11 @@ return [
     'managers'                  => [
         'default' => [
             'dev'        => env('APP_DEBUG'),
-            'meta'       => env('DOCTRINE_METADATA', 'annotations'),
+            'meta'       => env('DOCTRINE_METADATA', 'config'),
             'connection' => env('DB_CONNECTION', 'mysql'),
+            'mapping_file' => 'mappings',
             'namespaces' => [
-                'App'
+                'App\Domain'
             ],
             'paths'      => [
                 base_path('app/Entities')
@@ -110,7 +111,8 @@ return [
     |--------------------------------------------------------------------------
     */
     'custom_types'              => [
-        'json' => LaravelDoctrine\ORM\Types\Json::class
+        'json' => LaravelDoctrine\ORM\Types\Json::class,
+        'uuid' => Ramsey\Uuid\Doctrine\UuidType::class,
     ],
     /*
     |--------------------------------------------------------------------------

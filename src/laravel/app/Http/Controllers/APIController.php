@@ -7,11 +7,12 @@
  */
 
 namespace App\Http\Controllers;
+use App\Domain\Email\EmailRepository;
+use App\Domain\Users\UsersRepository;
+use Illuminate\Support\Facades\App;
 use Mail;
-use App\Entities\Users;
 use App\Http\Requests\EmailFormRequest;
 use App\Http\Requests\UserFormRequest;
-use Aws\Ses\SesClient;
 
 
 
@@ -21,6 +22,14 @@ use Aws\Ses\SesClient;
  */
 class APIController extends Controller
 {
+    protected $emailRepository;
+    protected $userRepository;
+
+    public function __construct()
+    {
+        $this->emailRepository = App::make(EmailRepository::class);
+        $this->userRepository = App::make(UsersRepository::class);
+    }
     /**
      * @param EmailFormRequest $response
      */
@@ -30,30 +39,45 @@ class APIController extends Controller
         $subject = $response->input('subject');
         $body = $response->input('body');
         $apiToken = $response->input('api_token');
-        $user = new Users();
-        $user->setEmail('aaa@aaa.com');
-        $user->setName('aaa@aaa.com');
+        $currentUser = $this->userRepository->findBy([
+            'api_token' => $apiToken
+        ]);
 
+        var_dump($currentUser->email);
+        die;
 
-        $callback = function ($m) use ($user, $to, $subject) {
-
-            $m->to('skvoz.ne@gmail.com', 'John Smith')
-                ->from('skvoz.ne@gmail.com')
-                ->subject('Welcome!!!!');
-        };
-
-        Mail::raw($body, $callback);
+//        $callback = function ($m) use ($user, $to, $subject) {
+//
+//            $m->to('skvoz.ne@gmail.com', 'John Smith')
+//                ->from('skvoz.ne@gmail.com')
+//                ->subject('Welcome!!!!');
+//        };
+//
+//        Mail::raw($body, $callback);
     }
 
     /**
-     * @param UserFormRequest $response
+     * @param UserFormRequest $request
      * @return \Illuminate\Http\JsonResponse
+     * @internal param UserFormRequest $response
      */
-    public function register(UserFormRequest $response)
+    public function register(UserFormRequest $request)
     {
-        $users = new Users();
-        $result = $users->stored($response);
-        $status = isset($result['errors']) ? 404 : 200;
+        $name = $request->input('name');
+        $email = $request->input('email');
+        $result = [];
+        try {
+            $users = $this->userRepository->create([
+                'name'=> $name,
+                'email' => $email
+            ]);
+            $result = [
+                'api_token' => $users->getApiToken(),
+            ];
+            $status = 200;
+        } catch (Exception $e) {
+            $status = 500;
+        }
 
         return response()->json($result, $status);
     }
