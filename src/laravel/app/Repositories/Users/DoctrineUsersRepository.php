@@ -2,27 +2,23 @@
 namespace App\Repositories\Users;
 
 use App\Domain\Users\UsersRepository;
-use Doctrine\ORM\EntityRepository;
+use App\Repositories\DoctrineBaseRepository;
 
-class DoctrineUsersRepository extends EntityRepository implements UsersRepository
+class DoctrineUsersRepository extends DoctrineBaseRepository implements UsersRepository
 {
-    /**
-     * @param $object
-     * @return mixed
-     */
     public  function save($object)
     {
         $this->_em->persist($object);
         $this->_em->flush($object);
+
+        return $object;
     }
 
-    /**
-     * @param $object
-     * @return bool
-     */
     public  function delete($object)
     {
         $this->_em->remove($object);
         $this->_em->flush($object);
+
+        return true;
     }
 }

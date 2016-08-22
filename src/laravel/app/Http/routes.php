@@ -11,10 +11,9 @@
 |
 */
 
-//Route::get('/', function () {
-//    return view('welcome');
-//});
-Route::get('/', 'EmailController@index');
+Route::get('/', 'SiteController@index');
+Route::get('/delete/{{id}}', 'SiteController@delete');
+Route::get('/view/{{id}}', 'SiteController@view');
 
 Route::group(['prefix' => 'api',], function () {
     Route::get('/register', 'APIController@register');

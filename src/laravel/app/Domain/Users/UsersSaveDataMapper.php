@@ -2,6 +2,7 @@
 namespace App\Domain\Users;
 
 use App\Http\Requests\UserFormRequest;
+use Illuminate\Http\Request;
 
 class UsersSaveDataMapper
 {
@@ -40,7 +41,7 @@ class UsersSaveDataMapper
     /**
      * @param mixed $request
      */
-    public function setRequest(UserFormRequest $request)
+    public function setRequest(Request $request)
     {
         $this->request = $request;
     }

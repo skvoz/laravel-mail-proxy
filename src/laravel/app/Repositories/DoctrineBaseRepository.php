@@ -1,9 +1,11 @@
 <?php
-namespace App\Infrastructure;
+namespace App\Repositories;
 
+use App\Domain\Email\EmailRepository;
+use App\Domain\Users\UsersRepository;
 use Doctrine\ORM\EntityRepository;
 
-class DoctrineBaseRepository extends EntityRepository
+class DoctrineBaseRepository extends EntityRepository implements EmailRepository, UsersRepository
 {
     public  function save($object)
     {

@@ -1,20 +1,17 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: kostiantyn
- * Date: 16.08.16
- * Time: 20:11
- */
-
 namespace App\Http\Controllers;
 
+use App\Domain\Email\Email;
 use App\Domain\Email\EmailRepository;
 use App\Domain\Users\Users;
 use App\Domain\Users\UsersRepository;
 use App\Domain\Users\UsersSaveDataMapper;
+use App\Repositories\Email\DoctrineEmailRepository;
+use App\Repositories\Users\DoctrineUsersRepository;
 use Exception;
-use App\Http\Requests\EmailFormRequest;
-use App\Http\Requests\UserFormRequest;
+use Illuminate\Foundation\Validation\ValidationException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Class APIController
@@ -23,11 +20,11 @@ use App\Http\Requests\UserFormRequest;
 class APIController extends Controller
 {
     /**
-     * @var EmailRepository
+     * @var DoctrineEmailRepository
      */
     protected $emailRepository;
     /**
-     * @var UsersRepository
+     * @var DoctrineUsersRepository
      */
     protected $userRepository;
     /**
@@ -38,63 +35,105 @@ class APIController extends Controller
      * @var Users
      */
     protected $userEntity;
+    /**
+     * @var Email
+     */
+    protected $emailEntity;
 
     /**
      * @param UsersSaveDataMapper $usersSaveDataMapper
+     * @param UsersRepository $userRepository
      * @param EmailRepository $emailRepository
-     * @param UsersRepository $usersRepository
      * @param Users $userEntity
-     * @internal param Users $userEntitiy
+     * @param Email $emailEntity
      */
     public function __construct(
         UsersSaveDataMapper $usersSaveDataMapper,
+        UsersRepository $userRepository,
         EmailRepository $emailRepository,
-        UsersRepository $usersRepository,
-        Users $userEntity
-    ) {
-        $this->userSaveDataMapper = $usersSaveDataMapper;
-        $this->emailRepository = $emailRepository;
-        $this->userRepository = $usersRepository;
-        $this->userEntity = $userEntity;
-
-    }
-    /**
-     * @param EmailFormRequest $response
-     */
-    public function sendEmail(EmailFormRequest $response)
+        Users $userEntity,
+        Email $emailEntity
+    )
     {
-        $to = $response->input('to');
-        $subject = $response->input('subject');
-        $body = $response->input('body');
-        $apiToken = $response->input('api_token');
-        $currentUser = $this->userRepository->findBy([
-            'api_token' => $apiToken
-        ]);
+        $this->userSaveDataMapper = $usersSaveDataMapper;
+        $this->userEntity = $userEntity;
+        $this->emailEntity = $emailEntity;
+        $this->userRepository = $userRepository;
+        $this->emailRepository = $emailRepository;
+    }
 
-        var_dump($currentUser->email);
-        die;
 
-//        $callback = function ($m) use ($user, $to, $subject) {
-//
-//            $m->to('skvoz.ne@gmail.com', 'John Smith')
-//                ->from('skvoz.ne@gmail.com')
-//                ->subject('Welcome!!!!');
-//        };
-//
-//        Mail::raw($body, $callback);
+    /**
+     * @param Request $request
+     * @internal param EmailFormRequest $response
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function sendEmail(Request $request)
+    {
+        try {
+            $this->validate($request, [
+                'to' => 'required|email|max:255',
+                'subject' => 'required|max:255',
+                'api_token' => 'required|min:60|max:60',
+            ]);
+
+            $to = $request->input('to');
+            $subject = $request->input('subject');
+            $body = $request->input('body');
+            $apiToken = $request->input('api_token');
+
+            /** @var Users $currentUser */
+            $currentUser = $this->userRepository->findBy([
+                'api_token' => $apiToken
+            ]);
+
+            $currentUser = isset($currentUser[0]) ? $currentUser[0] : null;
+
+            $this->emailEntity->setTarget($to);
+            $this->emailEntity->setSubject($subject);
+            $this->emailEntity->setBody($body);
+            $this->emailEntity->setUserId($currentUser->getId());
+
+            $this->emailRepository->save($this->emailEntity);
+
+            $callback = function ($m) use ($currentUser, $to, $subject, $body) {
+                $m->to($to, $to)
+                    ->from($currentUser->getEmail(), $currentUser->getName())
+                    ->subject($subject)
+                    ->setBody($body);
+            };
+
+            Mail::raw($body, $callback);
+            $status = 200;
+            $result = [];
+        } catch (ValidationException $e) {
+            $result = ['error' => $e->validator->getMessageBag()];
+            $status = 500;
+        } catch (Exception $e) {
+            $status = 500;
+            $result = ['error' => $e->getMessage()];
+        }
+
+        return response()->json($result, $status);
     }
 
     /**
-     * @param UserFormRequest $request
+     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      * @internal param UserFormRequest $response
      */
-    public function register(UserFormRequest $request)
+    public function register(Request $request)
     {
-        $this->userSaveDataMapper->setRequest($request);
-        $data = $this->userSaveDataMapper->execute();
 
         try {
+            $this->validate($request, [
+                'name' => 'required|unique:App\Domain\Users\Users,name|max:255',
+                'email' => 'required|email|unique:App\Domain\Users\Users,email|max:255'
+            ]);
+
+            $this->userSaveDataMapper->setRequest($request);
+            $data = $this->userSaveDataMapper->execute();
+
             $this->userEntity->setName($data['name']);
             $this->userEntity->setEmail($data['email']);
             $this->userEntity->setPassword($data['password']);
@@ -109,6 +148,9 @@ class APIController extends Controller
                 'api_token' => $this->userEntity->getApiToken(),
             ];
             $status = 200;
+        } catch (ValidationException $e) {
+            $result = ['error' => $e->validator->getMessageBag()];
+            $status = 500;
         } catch (Exception $e) {
             $result = ['error' => $e->getMessage()];
             $status = 500;

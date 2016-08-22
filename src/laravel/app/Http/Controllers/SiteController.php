@@ -14,9 +14,11 @@ class EmailController extends Controller
 {
     public function index()
     {
-        var_dump(new DoctrineEmailRepository());
+        phpinfo();
         die;
-        var_dump(App::environment());
+//        var_dump(new DoctrineEmailRepository());
+//        die;
+//        var_dump(App::environment());
         die;
 //        $scientist = new Scientist(
 //            'Albert',
