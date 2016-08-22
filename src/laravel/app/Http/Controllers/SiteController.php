@@ -2,52 +2,83 @@
 namespace App\Http\Controllers;
 
 
-use App\Entities\Email;
-use App\Entities\Scientist;
-use App\Infrastructure\Email\DoctrineEmailRepository;
+use App\Domain\Email\Email;
+use App\Domain\Email\EmailRepository;
 use Illuminate\Http\Request;
 use App\Task;
-use Illuminate\Support\Facades\App;
-use LaravelDoctrine\ORM\Facades\EntityManager;
+use Illuminate\Validation\Validator;
+use Symfony\Component\HttpFoundation\Session\Session;
 
-class EmailController extends Controller
+class SiteController extends Controller
 {
-    public function index()
+    protected $emailEntity;
+    /**
+     * @var EmailRepository
+     */
+    private $emailRepository;
+    /**
+     * @var Validator
+     */
+    private $validator;
+
+    /**
+     * SiteController constructor.
+     * @param EmailRepository $emailRepository
+     * @param Email $emailEntity
+     * @param Validator $validator
+     * @internal param \App\Domain\Email\Email $emailEntity
+     */
+    public function __construct(
+        EmailRepository $emailRepository,
+        Email $emailEntity
+    )
     {
-        phpinfo();
-        die;
-//        var_dump(new DoctrineEmailRepository());
-//        die;
-//        var_dump(App::environment());
-        die;
-//        $scientist = new Scientist(
-//            'Albert',
-//            'Einstein'
-//        );
-//
-//        $scientist->addTheory(
-//            new Theory('Theory of relativity')
-//        );
-        $repository = EntityManager::getRepository(Email::class);
-        /** @var Scientist $scientists */
-        $emails = $repository->findAll();
+        $this->emailRepository = $emailRepository;
+        $this->emailEntity = $emailEntity;
+    }
 
-//        EntityManager::persist($scientist);
-//        EntityManager::flush();
+    /**
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function index(Request $request)
+    {
+       $emails = $this->emailRepository->findAll();
 
-        return view('post', [
+        return view('index', [
             'items' => $emails,
+            'request' => $request,
         ]);
     }
 
     /**
-     * Display a list of all of the user's task.
-     *
-     * @param  Request  $request
-     * @return Response
+     * @param Request $request
+     * @param $id
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Exception
      */
-    public function send(Request $request)
+    public function view(Request $request, $id)
     {
-        echo 123;
+        $email = $this->emailRepository->find($id);
+
+        if (!$email) {
+            throw new \Exception('Email not found', 404);
+        }
+
+        return view('email', [
+            'email' => $email,
+        ]);
+    }
+
+    public function delete(Request $request, $id)
+    {
+        try {
+            $email = $this->emailRepository->find($id);
+            $this->emailRepository->delete($email);
+            $request->session()->flash('status', 'Successful operation');
+        } catch (\Exception $e) {
+            $request->session()->flash('error', $e->getMessage());
+        }
+
+        return redirect('/');
     }
 }
