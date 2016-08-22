@@ -6,6 +6,8 @@ use App\Domain\Email\EmailRepository;
 use App\Domain\Users\Users;
 use App\Domain\Users\UsersRepository;
 use App\Domain\Users\UsersSaveDataMapper;
+use App\Events\MessageWasPurchased;
+use App\Events\MessageWasPurchasedEvent;
 use App\Repositories\Email\DoctrineEmailRepository;
 use App\Repositories\Users\DoctrineUsersRepository;
 use Exception;
@@ -96,14 +98,9 @@ class APIController extends Controller
 
             $this->emailRepository->save($this->emailEntity);
 
-            $callback = function ($m) use ($currentUser, $to, $subject, $body) {
-                $m->to($to, $to)
-                    ->from($currentUser->getEmail(), $currentUser->getName())
-                    ->subject($subject)
-                    ->setBody($body);
-            };
 
-            Mail::raw($body, $callback);
+            event(new MessageWasPurchasedEvent($this->emailEntity));
+
             $status = 200;
             $result = [];
         } catch (ValidationException $e) {
