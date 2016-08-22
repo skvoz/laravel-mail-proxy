@@ -6,14 +6,12 @@ use App\Domain\Email\EmailRepository;
 use App\Domain\Users\Users;
 use App\Domain\Users\UsersRepository;
 use App\Domain\Users\UsersSaveDataMapper;
-use App\Events\MessageWasPurchased;
 use App\Events\MessageWasPurchasedEvent;
 use App\Repositories\Email\DoctrineEmailRepository;
 use App\Repositories\Users\DoctrineUsersRepository;
 use Exception;
 use Illuminate\Foundation\Validation\ValidationException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * Class APIController

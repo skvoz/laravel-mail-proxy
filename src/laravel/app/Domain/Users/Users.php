@@ -44,6 +44,20 @@ class Users
      * @ORM\Column(type="string")
      */
     protected $updated_at;
+    /**
+     * @OneToMany(targetEntity="Email", mappedBy="users")
+     */
+    protected $emails;
+
+    public function __construct()
+    {
+        $this->emails = new ArrayCollection();
+    }
+
+    public function getEmails()
+    {
+        return $this->emails;
+    }
 
     /**
      * @return mixed
@@ -172,20 +186,5 @@ class Users
     {
         $this->api_token = $api_token;
     }
-
-    public function whitelist()
-    {
-        return [
-            'name',
-            'email',
-            'password',
-            'remember_token',
-            'created_at',
-            'updated_at',
-            'api_token',
-        ];
-    }
-
-
 
 }

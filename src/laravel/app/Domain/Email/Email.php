@@ -1,6 +1,7 @@
 <?php
 namespace App\Domain\Email;
 
+use App\Domain\Users\Users;
 use Doctrine\ORM\Mapping AS ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -30,8 +31,8 @@ class Email
      */
     protected $body;
     /**
-     * @ORM\OneToMany(targetEntity="Users", mappedBy="users", cascade={"persist"})
-     * @var ArrayCollection|Users[]
+     * @ManyToOne(targetEntity="Users", inversedBy="users")
+     * @JoinColumn(name="user_id", referencedColumnName="id")
      */
     protected $user;
 
@@ -99,16 +100,6 @@ class Email
         return $this->user;
     }
 
-    public function whitelist()
-    {
-        return [
-            'target',
-            'subject',
-            'body',
-            'user_id',
-        ];
-    }
-
     /**
      * @return mixed
      */
@@ -139,6 +130,16 @@ class Email
     public function setTarget($target)
     {
         $this->target = $target;
+    }
+
+    public function setUsers(Users $user)
+    {
+        $this->user = $user;
+    }
+
+    public function getUsers()
+    {
+        return $this->user;
     }
 
 }

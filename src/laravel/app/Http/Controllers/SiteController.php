@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Domain\Email\Email;
 use App\Domain\Email\EmailRepository;
+use App\Domain\Users\Users;
+use App\Domain\Users\UsersRepository;
 use Illuminate\Http\Request;
 use App\Task;
 use Illuminate\Validation\Validator;
@@ -20,6 +22,10 @@ class SiteController extends Controller
      * @var Validator
      */
     private $validator;
+    /**
+     * @var UserRepository
+     */
+    private $userRepository;
 
     /**
      * SiteController constructor.
@@ -30,11 +36,13 @@ class SiteController extends Controller
      */
     public function __construct(
         EmailRepository $emailRepository,
+        UsersRepository $userRepository,
         Email $emailEntity
     )
     {
         $this->emailRepository = $emailRepository;
         $this->emailEntity = $emailEntity;
+        $this->userRepository = $userRepository;
     }
 
     /**
@@ -80,5 +88,12 @@ class SiteController extends Controller
         }
 
         return redirect('/');
+    }
+
+    public function test()
+    {
+        $userEntity = $this->userRepository->find(1);
+
+        var_dump($userEntity->email);
     }
 }

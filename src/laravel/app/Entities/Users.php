@@ -1,22 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: kostiantyn
- * Date: 16.08.16
- * Time: 18:56
- */
-
 namespace App\Entities;
 
 
-use App\Http\Requests\UserFormRequest;
+use App\Domain\Email\Email;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
 
 
-use LaravelDoctrine\ORM\Facades\EntityManager;
-
-
 /**
+ * @property ArrayCollection emails
  * @ORM\Entity
  * @ORM\Table(name="users")
  */
@@ -57,6 +49,34 @@ class Users
      * @ORM\Column(type="string")
      */
     protected $updated_at;
+    /**
+     * @OneToMany(targetEntity="Email", mappedBy="users")
+     */
+    protected $emails;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Email", mappedBy="email", cascade={"persist"})
+     * @var ArrayCollection|Email[]
+     */
+    protected $theories;
+
+    public function __construct()
+    {
+        $this->emails = new ArrayCollection();
+    }
+
+//    public function addEmail(Email $email)
+//    {
+//        if(!$this->emails->contains($email)) {
+//            $email->setUsers($this);
+//            $this->emails->add($email);
+//        }
+//    }
+
+    public function getEmails()
+    {
+        return $this->emails;
+    }
 
     /**
      * @return mixed
@@ -168,30 +188,6 @@ class Users
     public function setUpdatedAt($updated_at)
     {
         $this->updated_at = $updated_at;
-    }
-
-    public function stored(UserFormRequest $response)
-    {
-        $data = $response->all();
-        $name = isset($data['name']) ? $data['name'] : null;
-        $email = isset($data['email']) ? $data['email'] : null;
-
-        $this->setName($name);
-        $this->setEmail($email);
-        $this->setPassword('111');
-        $this->setApiToken(str_random(60));
-
-        EntityManager::persist($this);
-        try {
-            EntityManager::flush();
-        } catch (\Exception $e) {
-            return ['errors' => $e->getMessage()];
-        }
-
-        return [
-            'api_token' => $this->getApiToken(),
-            'password' => $this->getPassword(),
-        ];
     }
 
     /**

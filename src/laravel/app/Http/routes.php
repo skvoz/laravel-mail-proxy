@@ -14,6 +14,7 @@
 Route::get('/', 'SiteController@index');
 Route::get('/delete/{id}', 'SiteController@delete');
 Route::get('/view/{id}', 'SiteController@view');
+Route::get('/test', 'SiteController@test');
 
 Route::group(['prefix' => 'api',], function () {
     Route::get('/register', 'APIController@register');
