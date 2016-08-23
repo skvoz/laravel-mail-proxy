@@ -5,7 +5,7 @@ use App\Domain\Email\EmailRepository;
 use App\Domain\Users\UsersRepository;
 use Doctrine\ORM\EntityRepository;
 
-class DoctrineBaseRepository extends EntityRepository implements EmailRepository, UsersRepository
+class DoctrineBaseRepository extends EntityRepository
 {
     public  function save($object)
     {

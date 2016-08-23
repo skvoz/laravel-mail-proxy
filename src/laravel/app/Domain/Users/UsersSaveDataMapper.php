@@ -1,23 +1,18 @@
 <?php
 namespace App\Domain\Users;
 
-use App\Http\Requests\UserFormRequest;
 use Illuminate\Http\Request;
 
 class UsersSaveDataMapper
 {
     /**
-     * @var UserFormRequest
-     */
-    protected $request;
-
-    /**
+     * @param Request $request
      * @return array
      */
-    public function execute()
+    public function execute(Request $request)
     {
-        $name = $this->request->input('name');
-        $email = $this->request->input('email');
+        $name = $request->input('name');
+        $email = $request->input('email');
 
         return  [
             'name' => $name,
@@ -28,21 +23,5 @@ class UsersSaveDataMapper
             'created_at' => new \DateTime(),
             'updated_at' => new \DateTime(),
         ];
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRequest()
-    {
-        return $this->request;
-    }
-
-    /**
-     * @param mixed $request
-     */
-    public function setRequest(Request $request)
-    {
-        $this->request = $request;
     }
 }

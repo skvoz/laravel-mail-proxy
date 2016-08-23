@@ -3,7 +3,8 @@ namespace App\Http\Controllers;
 
 use App\Domain\Email\Email;
 use App\Domain\Email\EmailRepository;
-use App\Domain\Users\Users;
+use App\Domain\Email\EmailSaveDataMapper;
+use App\Domain\Users\User;
 use App\Domain\Users\UsersRepository;
 use App\Domain\Users\UsersSaveDataMapper;
 use App\Events\MessageWasPurchasedEvent;
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
  */
 class APIController extends Controller
 {
+
     /**
      * @var DoctrineEmailRepository
      */
@@ -32,26 +34,32 @@ class APIController extends Controller
      */
     protected $userSaveDataMapper;
     /**
-     * @var Users
+     * @var User
      */
     protected $userEntity;
     /**
      * @var Email
      */
     protected $emailEntity;
+    /**
+     * @var EmailSaveDataMapper
+     */
+    private $emailSaveDataMapper;
 
     /**
      * @param UsersSaveDataMapper $usersSaveDataMapper
+     * @param EmailSaveDataMapper $emailSaveDataMapper
      * @param UsersRepository $userRepository
      * @param EmailRepository $emailRepository
-     * @param Users $userEntity
+     * @param User $userEntity
      * @param Email $emailEntity
      */
     public function __construct(
         UsersSaveDataMapper $usersSaveDataMapper,
+        EmailSaveDataMapper $emailSaveDataMapper,
         UsersRepository $userRepository,
         EmailRepository $emailRepository,
-        Users $userEntity,
+        User $userEntity,
         Email $emailEntity
     )
     {
@@ -60,6 +68,7 @@ class APIController extends Controller
         $this->emailEntity = $emailEntity;
         $this->userRepository = $userRepository;
         $this->emailRepository = $emailRepository;
+        $this->emailSaveDataMapper = $emailSaveDataMapper;
     }
 
 
@@ -77,25 +86,16 @@ class APIController extends Controller
                 'api_token' => 'required|min:60|max:60',
             ]);
 
-            $to = $request->input('to');
-            $subject = $request->input('subject');
-            $body = $request->input('body');
-            $apiToken = $request->input('api_token');
+            $data = $this->emailSaveDataMapper->execute($request);
+            $this->emailEntity->fillEntityArray($data);
 
-            /** @var Users $currentUser */
-            $currentUser = $this->userRepository->findBy([
-                'api_token' => $apiToken
+            $userEntity = $this->userRepository->findOneBy([
+                'api_token' => $request->input('api_token')
             ]);
 
-            $currentUser = isset($currentUser[0]) ? $currentUser[0] : null;
+            $userEntity->addEmail($this->emailEntity);
 
-            $this->emailEntity->setTarget($to);
-            $this->emailEntity->setSubject($subject);
-            $this->emailEntity->setBody($body);
-            $this->emailEntity->setUserId($currentUser->getId());
-
-            $this->emailRepository->save($this->emailEntity);
-
+            $this->userRepository->save($userEntity);
 
             event(new MessageWasPurchasedEvent($this->emailEntity));
 
@@ -103,7 +103,7 @@ class APIController extends Controller
             $result = [];
         } catch (ValidationException $e) {
             $result = ['error' => $e->validator->getMessageBag()];
-            $status = 500;
+            $status = 422;
         } catch (Exception $e) {
             $status = 500;
             $result = ['error' => $e->getMessage()];
@@ -122,21 +122,12 @@ class APIController extends Controller
 
         try {
             $this->validate($request, [
-                'name' => 'required|unique:App\Domain\Users\Users,name|max:255',
-                'email' => 'required|email|unique:App\Domain\Users\Users,email|max:255'
+                'name' => 'required|unique:App\Domain\Users\User,name|max:255',
+                'email' => 'required|email|unique:App\Domain\Users\User,email|max:255'
             ]);
 
-            $this->userSaveDataMapper->setRequest($request);
-            $data = $this->userSaveDataMapper->execute();
-
-            $this->userEntity->setName($data['name']);
-            $this->userEntity->setEmail($data['email']);
-            $this->userEntity->setPassword($data['password']);
-            $this->userEntity->setRememberToken($data['remember_token']);
-            $this->userEntity->setCreatedAt($data['created_at']);
-            $this->userEntity->setUpdatedAt($data['updated_at']);
-            $this->userEntity->setApiToken($data['api_token']);
-
+            $data = $this->userSaveDataMapper->execute($request);
+            $this->userEntity->fillEntityArray($data);
             $this->userRepository->save($this->userEntity);
 
             $result = [
@@ -145,7 +136,7 @@ class APIController extends Controller
             $status = 200;
         } catch (ValidationException $e) {
             $result = ['error' => $e->validator->getMessageBag()];
-            $status = 500;
+            $status = 422;
         } catch (Exception $e) {
             $result = ['error' => $e->getMessage()];
             $status = 500;
@@ -153,4 +144,5 @@ class APIController extends Controller
 
         return response()->json($result, $status);
     }
+
 }

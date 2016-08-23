@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Email\Email;
 use App\Domain\Email\EmailRepository;
-use App\Domain\Users\Users;
+use App\Domain\Users\User;
 use App\Domain\Users\UsersRepository;
 use app\Domain\Users\UsersSaveDataMapper;
 use App\Repositories\Email\DoctrineEmailRepository;
@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UsersRepository::class, function($app){
             return new DoctrineUsersRepository(
                 $app['em'],
-                $app['em']->getClassMetaData(Users::class)
+                $app['em']->getClassMetaData(User::class)
             );
         });
 

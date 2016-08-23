@@ -1,6 +1,4 @@
 <?php
-
-
 namespace App\Repositories\Email;
 
 use App\Domain\Email\EmailRepository;

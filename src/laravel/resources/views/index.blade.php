@@ -35,7 +35,7 @@
 
                             <div class="row">
 {{--                                <div class="col-sm-2">{{$item->user->getEmail()}}</div>--}}
-                                <div class="col-sm-2">{{'here must be user name and email'}}</div>
+                                <div class="col-sm-2">{{$item->getUser()->getName()}}</div>
                                 <div class="col-sm-2">{{$item->getTarget()}}</div>
                                 <div class="col-sm-2">{{$item->getSubject()}}</div>
                                 <div class="col-sm-2">

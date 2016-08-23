@@ -19,7 +19,7 @@
                     <div class="item">
                         <div class="row">
                             <div class="col-sm-12">
-                                from: - <br/>
+                                from: {{$email->getUser()->getEmail()}} <br/>
                                 to: {{$email->getTarget()}}
                             </div>
                         </div>

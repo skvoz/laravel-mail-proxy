@@ -2,14 +2,22 @@
 namespace App\Domain\Users;
 
 use App\Domain\Email\Email;
+use App\Domain\IEntity;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
+use Exception;
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="users")
  */
-class Users
+class User implements IEntity
 {
+    public function __call($method, $args)
+    {
+        throw new Exception(sprintf('Unknown method: %s, params:%s', $method, json_encode($args)));
+    }
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -38,27 +46,21 @@ class Users
      */
     protected $api_token;
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="datetime")
      */
     protected $created_at;
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="datetime")
      */
     protected $updated_at;
     /**
-     * @ORM\OneToMany(targetEntity="Email", mappedBy="users", cascade={"persist"})
-     * @var ArrayCollection|Email[]
+     * @ORM\OneToMany(targetEntity="App\Domain\Email\Email", mappedBy="user", cascade={"persist"})
      */
-    public $emails;
+    protected $emails;
 
     public function __construct()
     {
         $this->emails = new ArrayCollection();
-    }
-
-    public function getEmails()
-    {
-        return $this->emails;
     }
 
     /**
@@ -96,17 +98,20 @@ class Users
     /**
      * @return mixed
      */
-    public function getEmail()
+    public function getEmails()
     {
-        return $this->email;
+        return $this->emails;
     }
 
     /**
-     * @param mixed $email
+     * @param Email $email
      */
-    public function setEmail($email)
+    public function addEmail(Email $email)
     {
-        $this->email = $email;
+        if (!$this->emails->contains($email)) {
+            $email->setUser($this);
+            $this->emails->add($email);
+        }
     }
 
     /**
@@ -176,6 +181,7 @@ class Users
     /**
      * @return mixed
      */
+
     public function getApiToken()
     {
         return $this->api_token;
@@ -189,4 +195,37 @@ class Users
         $this->api_token = $api_token;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * @param mixed $email
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    }
+    /**
+     * @param $data key-value array
+     * @return mixed
+     */
+    public function fillEntityArray($data)
+    {
+        foreach ($data as $key => $value) {
+            if (strstr($key, '_')) {
+                $arr = explode('_', $key);
+                $newKey = '';
+                foreach ($arr as $item) {
+                    $newKey .= ucfirst($item);
+                }
+                $key = $newKey;
+            }
+            $this->{'set' . ucfirst($key)}($value);
+        }
+    }
 }

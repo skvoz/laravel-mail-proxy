@@ -1,16 +1,22 @@
 <?php
 namespace App\Domain\Email;
 
-use App\Domain\Users\Users;
+use App\Domain\IEntity;
+use App\Domain\Users\User;
 use Doctrine\ORM\Mapping AS ORM;
-use Doctrine\Common\Collections\ArrayCollection;
+use Exception;
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="email")
  */
-class Email
+class Email implements IEntity
 {
+    public function __call($method, $args)
+    {
+        throw new Exception(sprintf('Unknown method: %s, params:%s', $method, json_encode($args)));
+    }
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -32,13 +38,11 @@ class Email
     protected $body;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Users", inversedBy="email")
-     * @var Users
+     * @ORM\ManyToOne(targetEntity="App\Domain\Users\User", inversedBy="emails")
      */
     protected $user;
 
     protected $user_id;
-
     /**
      * @return mixed
      */
@@ -88,13 +92,6 @@ class Email
         $this->body = $body;
     }
 
-    /**
-     * @return ArrayCollection|Users[]
-     */
-    public function getUser()
-    {
-        return $this->user;
-    }
 
     /**
      * @return mixed
@@ -128,14 +125,32 @@ class Email
         $this->target = $target;
     }
 
-    public function setUsers(Users $user)
+    public function setUser(User $user)
     {
         $this->user = $user;
     }
 
-    public function getUsers()
+    public function getUser()
     {
         return $this->user;
     }
 
+    /**
+     * @param $data key-value array
+     * @return mixed
+     */
+    public function fillEntityArray($data)
+    {
+        foreach ($data as $key => $value) {
+            if (strstr($key, '_')) {
+                $arr = explode('_', $key);
+                $newKey = '';
+                foreach ($arr as $item) {
+                    $newKey .= ucfirst($item);
+                }
+                $key = $newKey;
+            }
+            $this->{'set' . ucfirst($key)}($value);
+        }
+    }
 }

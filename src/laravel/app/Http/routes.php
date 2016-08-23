@@ -1,5 +1,4 @@
 <?php
-
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -11,10 +10,10 @@
 |
 */
 
-Route::get('/', 'SiteController@index');
-Route::get('/delete/{id}', 'SiteController@delete');
-Route::get('/view/{id}', 'SiteController@view');
-Route::get('/test', 'SiteController@test');
+Route::get('/', 'EmailController@index');
+Route::get('/delete/{id}', 'EmailController@delete');
+Route::get('/view/{id}', 'EmailController@view');
+Route::get('/test', 'EmailController@test');
 
 Route::group(['prefix' => 'api',], function () {
     Route::get('/register', 'APIController@register');

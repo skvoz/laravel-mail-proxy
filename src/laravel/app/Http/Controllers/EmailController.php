@@ -4,24 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Domain\Email\Email;
 use App\Domain\Email\EmailRepository;
-use App\Domain\Users\Users;
 use App\Domain\Users\UsersRepository;
 use Illuminate\Http\Request;
 use App\Task;
-use Illuminate\Validation\Validator;
-use Symfony\Component\HttpFoundation\Session\Session;
 
-class SiteController extends Controller
+class EmailController extends Controller
 {
     protected $emailEntity;
     /**
      * @var EmailRepository
      */
     private $emailRepository;
-    /**
-     * @var Validator
-     */
-    private $validator;
+
     /**
      * @var UserRepository
      */
@@ -30,8 +24,9 @@ class SiteController extends Controller
     /**
      * SiteController constructor.
      * @param EmailRepository $emailRepository
+     * @param UsersRepository $userRepository
      * @param Email $emailEntity
-     * @param Validator $validator
+     * @internal param Validator $validator
      * @internal param \App\Domain\Email\Email $emailEntity
      */
     public function __construct(
@@ -46,11 +41,12 @@ class SiteController extends Controller
     }
 
     /**
+     * @param Request $request
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index(Request $request)
     {
-       $emails = $this->emailRepository->findAll();
+        $emails = $this->emailRepository->findAll();
 
         return view('index', [
             'items' => $emails,
@@ -77,6 +73,11 @@ class SiteController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param $id
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
     public function delete(Request $request, $id)
     {
         try {
@@ -92,9 +93,6 @@ class SiteController extends Controller
 
     public function test()
     {
-        $userEntity = $this->userRepository->find(1);
-        echo '<pre>';
-        var_dump($userEntity);
-        echo '</pre>';
+        //test code
     }
 }
