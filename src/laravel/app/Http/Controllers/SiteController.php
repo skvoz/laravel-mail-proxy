@@ -93,7 +93,8 @@ class SiteController extends Controller
     public function test()
     {
         $userEntity = $this->userRepository->find(1);
-
-        var_dump($userEntity->email);
+        echo '<pre>';
+        var_dump($userEntity);
+        echo '</pre>';
     }
 }

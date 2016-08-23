@@ -1,11 +1,12 @@
 <?php
 namespace App\Domain\Users;
 
+use App\Domain\Email\Email;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="email")
+ * @ORM\Table(name="users")
  */
 class Users
 {
@@ -45,9 +46,10 @@ class Users
      */
     protected $updated_at;
     /**
-     * @OneToMany(targetEntity="Email", mappedBy="users")
+     * @ORM\OneToMany(targetEntity="Email", mappedBy="users", cascade={"persist"})
+     * @var ArrayCollection|Email[]
      */
-    protected $emails;
+    public $emails;
 
     public function __construct()
     {

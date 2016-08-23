@@ -30,19 +30,15 @@ class Email
      * @ORM\Column(type="string")
      */
     protected $body;
+
     /**
-     * @ManyToOne(targetEntity="Users", inversedBy="users")
-     * @JoinColumn(name="user_id", referencedColumnName="id")
+     * @ORM\ManyToOne(targetEntity="Users", inversedBy="email")
+     * @var Users
      */
     protected $user;
 
     protected $user_id;
 
-
-    public function __construct()
-    {
-        $this->user = new ArrayCollection;
-    }
     /**
      * @return mixed
      */
